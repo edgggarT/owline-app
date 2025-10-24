@@ -1,10 +1,12 @@
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from flask_socketio import SocketIO
 import os
 from datetime import timedelta
 from .database import db_close
 
+socketio = SocketIO()
 
 def Create_app():
     app = Flask(__name__)
@@ -16,6 +18,8 @@ def Create_app():
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
 
+
+    socketio.init_app(app, cors_allowed_origins='*')
     CORS(app)
     jwt = JWTManager(app)
 
@@ -36,4 +40,4 @@ def Create_app():
     def index():
         return 'Backend funcionando'
     
-    return app
+    return app, socketio

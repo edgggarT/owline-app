@@ -43,8 +43,8 @@ def update_user_info():
 
     new_email = data.get('email')
     if new_email and new_email != user['email']:
-        if users_db.email_exists(new_name, user_id):
-            return jsonify({'msg': 'El email ya esta registrado'}), 409
+        if users_db.email_exists(new_email, user_id):
+            return jsonify({'msg': 'El email ya esta registrado'}), 500
         updates['email'] = new_email
 
     new_password = data.get('newPassword')
@@ -63,8 +63,6 @@ def update_user_info():
             'name': updates.get('name', user['name']),
             'email': updates.get('email', user['email']) 
         })
-
-    return jsonify({'msg': 'Error interno del servicio al actualizar'})
 
 
 

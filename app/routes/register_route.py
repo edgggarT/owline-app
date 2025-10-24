@@ -10,10 +10,10 @@ def register():
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
+    print(email)
 
     if users_db.email_exists_register(email):
-        return jsonify({'msg': 'El email ya existe!'})
-    else:
         users_db.user_register(name, email, password)
-    
-    return jsonify({'msg': 'Error interno del servicio al registrar, intentelo mas tarde :('})
+        return jsonify({'msg': 'Registro completado'}), 201
+    else:
+        return jsonify({'msg': 'El email ya existe!'}), 409

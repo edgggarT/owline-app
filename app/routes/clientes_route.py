@@ -1,9 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_socketio import emit
 from ..database.clientes_db import clientes_db
+from app import socketio
+
 
 clientes_bp = Blueprint('clientes', __name__)
-
 
 
 @clientes_bp.route('/clientDni', methods=['GET'])
@@ -77,13 +79,19 @@ def create_client():
     direccion_calle = data.get('direccion_calle')
 
     if clientes_db.dni_exists(dni):
-        return jsonify({'msg':'El DNI ya esta registrado'})
+        return jsonify({'msg':'El DNI ya esta registrado'}), 409
     elif clientes_db.email_exists(email):
-        return jsonify({'msg': 'El email ya esta registrado'})
+        return jsonify({'msg': 'El email ya esta registrado'}), 409
     else:
-        clientes_db.create_client(usuario_id ,nombre, apellido, email, telefono, dni, fecha_nacimiento, direccion_ciudad, direccion_calle)
+        success = clientes_db.create_client(usuario_id ,nombre, apellido, email, telefono, dni, fecha_nacimiento, direccion_ciudad, direccion_calle)
+        
+        if success:
+            socketio.emit('Log actualizado', {'message':'Nuevo cliente creado'})
+            return jsonify({'msg': 'Cliente registrado exitosamente'}), 200
+        else:
+            return jsonify({'msg': 'Ha ocurrido un error del servidor, intentelo mas tarde :('})
+
     
-    return jsonify({'msg': 'Ha ocurrido un error del servidor, intentelo mas tarde :('})
 
 @clientes_bp.route('/client', methods=['DELETE'])
 @jwt_required()
@@ -98,6 +106,7 @@ def delete_clients():
     remove = clientes_db.delete_client(usuario_id ,dniSearch)
 
     if remove:
+        socketio.emit('Log actualizado', {'message':'Cliente eliminado'})
         print('Se elimino el cliente')
         return jsonify({'msg': 'Se elimino correctamente el cliente'})
     else:
@@ -118,8 +127,12 @@ def update_client():
 
     success = clientes_db.update_client_db(usuario_id ,dniToUpdate, updates)
 
-    if success:
-        return jsonify({'msg': f'Cliente con DNI {dniToUpdate} actualizado'})
+    if success == 'sucess':
+        socketio.emit('Log actualizado', {'message':'Cliente actualizado'})
+        return jsonify({'msg': f'Cliente con DNI {dniToUpdate} actualizado'}), 200
+    elif success == 'duplicate_email':
+        return jsonify({'msg': f'El email ya esta registrado'}), 409
     else:
-        return jsonify({'msg': f'Error al actualizar el cliente'})
+        return jsonify({'msg': f'Error al actualizar el cliente'}), 400
+
     

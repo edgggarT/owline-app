@@ -1,5 +1,5 @@
 from .connect_db import db_connect, db_close
-
+from mysql.connector import errorcode
 
 
 class Clientes: 
@@ -162,11 +162,16 @@ class Clientes:
             cursor.execute(user_query)
             cursor.execute(query, tuple(dataValues))
             conn.commit()
-            success = True
+            return 'sucess'
         except Exception as e:
             print(f'Error al actualizar: {e}')
             conn.rollback()
-            success = False
+            print(e.args[0])
+            print(errorcode.ER_DUP_ENTRY)
+            if e.args[0] == errorcode.ER_DUP_ENTRY:
+                return 'duplicate_email'
+            else:
+                return 'general_error'
         finally: 
             cursor.close()
             conn.close()

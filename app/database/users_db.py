@@ -106,7 +106,7 @@ class Users:
 
         query = "SELECT email FROM users WHERE email = %s"
         cursor.execute(query, (email, ))
-        exists = cursor.fetchone() is not None
+        exists = cursor.fetchone() is None
 
         cursor.close()
         conn.close()
